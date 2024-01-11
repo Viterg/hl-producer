@@ -8,8 +8,8 @@ group = 'ru.viterg'
 version = '0.1.0'
 
 java {
-    sourceCompatibility = '17'
-    targetCompatibility = '17'
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
 }
 
 configurations {
@@ -31,6 +31,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'io.projectreactor.kafka:reactor-kafka'
+
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'org.apache.commons:commons-lang3'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -40,7 +46,7 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
-    testImplementation "org.testcontainers:testcontainers:$pgTestcontainerVersion"
+    testImplementation "org.testcontainers:testcontainers:$testcontainersVersion"
 }
 
 tasks.named('test') {

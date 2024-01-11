@@ -1,0 +1,39 @@
+server:
+  port: 8094
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: hl-producer
+  kafka:
+    producer:
+      batch-size: 20
+      retries: 3
+      bootstrap-servers: kafka:29092
+  jackson:
+    deserialization:
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+      FAIL_ON_NUMBERS_FOR_ENUMS: true
+      FAIL_ON_NULL_FOR_PRIMITIVES: true
+      USE_BIG_DECIMAL_FOR_FLOATS: true
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: true
+    generator:
+      WRITE_BIGDECIMAL_AS_PLAIN: true
+  devtools:
+    add-properties: false
+
+application:
+  kafka:
+    topic: agents-data-output-v1
+  generation:
+    count-per-minute: 10
+    count-of-agents: 1000
+
+logging:
+  level:
+    ROOT: INFO
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} [%thread] %clr(%-5level) %clr(%logger{36}){magenta} - %msg%n"
