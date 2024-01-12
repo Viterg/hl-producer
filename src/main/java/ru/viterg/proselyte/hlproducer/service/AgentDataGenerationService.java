@@ -2,20 +2,17 @@ package ru.viterg.proselyte.hlproducer.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import ru.viterg.proselyte.hlproducer.configuration.GenerationConfig;
 import ru.viterg.proselyte.hlproducer.model.Agent;
 import ru.viterg.proselyte.hlproducer.model.AgentInfo;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Set;
-
-import static java.util.UUID.randomUUID;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -27,25 +24,26 @@ public class AgentDataGenerationService {
     private final GenerationConfig config;
     private final ObjectMapper objectMapper;
 
-    @PostConstruct
+    @Scheduled(fixedRate = 1L, timeUnit = TimeUnit.MINUTES)
     public void initSendingNewData() {
         int messagesPerMinute = config.getCountPerMinute();
         Set<Agent> agents = agentGenerator.getAgents();
-        for (Agent agent : agents) {
-            try {
-                sendData(agent);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+        for (int i = 0; i < messagesPerMinute; i++) {
+            Flux.fromIterable(agents)
+                    .flatMap(agent -> dataSender.sendMessage(prepareMessage(agent)))
+                    .doOnNext(result -> log.debug("Message was sent, result: {}", result.recordMetadata()))
+                    .blockLast();
         }
     }
 
-    private void sendData(Agent agent) throws JsonProcessingException {
-        AgentInfo agentInfo = new AgentInfo(randomUUID(), agent.agentId(),
-                                            Instant.now().minus(1, ChronoUnit.WEEKS).toEpochMilli(),
-                                            randomAlphabetic(4, 8),
-                                            (int) (Math.random() * 100));
-        String message = objectMapper.writeValueAsString(agentInfo);
-        dataSender.sendMessage(message);
+    private String prepareMessage(Agent agent) {
+        String message = "";
+        try {
+            AgentInfo agentInfo = AgentInfo.withRandomData(agent.agentId());
+            message = objectMapper.writeValueAsString(agentInfo);
+        } catch (JsonProcessingException e) {
+            log.warn("Can't prepare message: {}", e.getMessage());
+        }
+        return message;
     }
 }

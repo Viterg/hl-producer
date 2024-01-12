@@ -10,7 +10,7 @@ spring:
     producer:
       batch-size: 20
       retries: 3
-      bootstrap-servers: kafka:29092
+      bootstrap-servers: localhost:29092
   jackson:
     deserialization:
       ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
