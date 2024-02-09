@@ -19,7 +19,7 @@ public class DataSender {
     private String topic;
 
     Mono<SenderResult<Void>> sendMessage(String message) {
-        log.debug("Sending message [{}] to topic [{}]", message, topic);
+        log.info("Sending message [{}] to topic [{}]", message, topic);
         return kafkaTemplate.send(topic, message);
     }
 }
