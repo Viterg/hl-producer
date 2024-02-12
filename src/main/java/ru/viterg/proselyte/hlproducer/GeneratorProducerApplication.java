@@ -45,5 +45,4 @@ public class GeneratorProducerApplication {
     public ReactiveKafkaProducerTemplate<String, String> kafkaProducerTemplate(SenderOptions<String, String> senderOptions) {
         return new ReactiveKafkaProducerTemplate<>(senderOptions);
     }
-
 }

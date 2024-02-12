@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.kafka.sender.SenderResult;
 import ru.viterg.proselyte.hlproducer.configuration.GenerationConfig;
 import ru.viterg.proselyte.hlproducer.model.Agent;
 import ru.viterg.proselyte.hlproducer.model.AgentInfo;
@@ -26,11 +27,14 @@ public class AgentDataGenerationService {
     @Scheduled(fixedRate = 1L, timeUnit = TimeUnit.MINUTES)
     public void initSendingNewData() {
         Flux.fromIterable(agentGenerator.getAgents())
-                .flatMap(agent -> Flux.range(0, config.getCountPerMinute())
-                        .flatMap(i -> dataSender.sendMessage(prepareMessage(agent)))
-                        .doOnNext(result -> log.info("Message was sent, result: {}", result.recordMetadata()))
-                )
+                .flatMap(this::generateAndSendMessages)
                 .subscribe();
+    }
+
+    private Flux<SenderResult<Void>> generateAndSendMessages(Agent agent) {
+        return Flux.range(0, config.getCountPerMinute())
+                .flatMap(i -> dataSender.sendMessage(prepareMessage(agent)))
+                .doOnNext(result -> log.info("Message was sent, result: {}", result.recordMetadata()));
     }
 
     private String prepareMessage(Agent agent) {
