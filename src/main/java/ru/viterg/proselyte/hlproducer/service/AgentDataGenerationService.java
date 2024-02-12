@@ -11,7 +11,6 @@ import ru.viterg.proselyte.hlproducer.configuration.GenerationConfig;
 import ru.viterg.proselyte.hlproducer.model.Agent;
 import ru.viterg.proselyte.hlproducer.model.AgentInfo;
 
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -25,14 +24,11 @@ public class AgentDataGenerationService {
     private final ObjectMapper objectMapper;
 
     @Scheduled(fixedRate = 1L, timeUnit = TimeUnit.MINUTES)
-    public void initSendingNewData() { // should be like Mono<Void>
-        int messagesPerMinute = config.getCountPerMinute();
-        Set<Agent> agents = agentGenerator.getAgents();
-
-        Flux.range(0, messagesPerMinute)
-                .flatMap(i -> Flux.fromIterable(agents)
-                        .flatMap(agent -> dataSender.sendMessage(prepareMessage(agent)))
-                        .doOnNext(result -> log.debug("Message was sent, result: {}", result.recordMetadata()))
+    public void initSendingNewData() {
+        Flux.fromIterable(agentGenerator.getAgents())
+                .flatMap(agent -> Flux.range(0, config.getCountPerMinute())
+                        .flatMap(i -> dataSender.sendMessage(prepareMessage(agent)))
+                        .doOnNext(result -> log.info("Message was sent, result: {}", result.recordMetadata()))
                 )
                 .subscribe();
     }
